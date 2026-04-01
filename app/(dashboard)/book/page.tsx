@@ -13,7 +13,7 @@ export default async function BookPage() {
       .from("services")
       .select("*")
       .eq("active", true)
-      .order("category")
+      .order("type")
       .order("duration_minutes"),
     supabase
       .from("coaches")

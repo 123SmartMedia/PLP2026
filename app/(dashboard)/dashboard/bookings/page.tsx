@@ -57,16 +57,16 @@ export default async function BookingsPage() {
       services(name, duration_minutes)
     `)
     .eq("user_id", user!.id)
-    .order("start_at", { ascending: false });
+    .order("start_time", { ascending: false });
 
   const bookings = rawBookings as BookingWithRelations[] | null;
 
   const now = new Date().toISOString();
   const upcoming = (bookings ?? []).filter(
-    (b) => b.start_at >= now && b.status !== "cancelled"
+    (b) => b.start_time >= now && b.status !== "cancelled"
   );
   const past = (bookings ?? []).filter(
-    (b) => b.start_at < now || b.status === "cancelled" || b.status === "completed"
+    (b) => b.start_time < now || b.status === "cancelled" || b.status === "completed"
   );
 
   return (
@@ -122,12 +122,12 @@ export default async function BookingsPage() {
                       </p>
                     )}
                     <p className="text-gray-400 text-sm mt-1">
-                      {formatDate(booking.start_at)}
+                      {formatDate(booking.start_time)}
                     </p>
                     {(booking as BookingWithRelations).services?.duration_minutes && (
                       <p className="text-gray-400 text-xs mt-0.5">
                         {(booking as BookingWithRelations).services?.duration_minutes} min ·{" "}
-                        {formatPrice(booking.price_cents)}
+                        {formatPrice(booking.total_cents)}
                       </p>
                     )}
                     {booking.notes && (
@@ -163,7 +163,7 @@ export default async function BookingsPage() {
                     {(booking as BookingWithRelations).services?.name ?? "Lesson"}
                   </p>
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {formatDate(booking.start_at)}
+                    {formatDate(booking.start_time)}
                     {(booking as BookingWithRelations).coaches?.name
                       ? ` · ${(booking as BookingWithRelations).coaches?.name}`
                       : ""}

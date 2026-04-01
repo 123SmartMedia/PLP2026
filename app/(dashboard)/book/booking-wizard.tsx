@@ -37,7 +37,7 @@ function formatDate(dateStr: string) {
 
 // ─── Step 1: Service ──────────────────────────────────────────────────────────
 
-const CATEGORY_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<string, string> = {
   lesson: "Private Lessons",
   clinic: "Clinics & Group Training",
   rental: "Facility Rentals",
@@ -53,7 +53,7 @@ function ServiceStep({
   onSelect: (s: Service) => void;
 }) {
   const grouped = services.reduce<Record<string, Service[]>>((acc, s) => {
-    (acc[s.category] ??= []).push(s);
+    (acc[s.type] ??= []).push(s);
     return acc;
   }, {});
 
@@ -62,7 +62,7 @@ function ServiceStep({
       {Object.entries(grouped).map(([cat, items]) => (
         <div key={cat}>
           <h3 className="text-navy font-bold text-xs uppercase tracking-widest mb-3 text-gray-400">
-            {CATEGORY_LABELS[cat] ?? cat}
+            {TYPE_LABELS[cat] ?? cat}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {items.map((s) => (
@@ -406,7 +406,7 @@ function ConfirmStep({
 
 function currentStepIndex(draft: Draft): number {
   if (!draft.service) return 0;
-  if (draft.service.category !== "rental" && !draft.coach) return 1;
+  if (draft.service.type !== "rental" && !draft.coach) return 1;
   if (!draft.slot) return 2;
   return 3;
 }
@@ -431,7 +431,7 @@ export default function BookingWizard({
   const [submitting, startTransition] = useTransition();
 
   const step = currentStepIndex(draft);
-  const isRental = draft.service?.category === "rental";
+  const isRental = draft.service?.type === "rental";
 
   // Which steps are "done" for the indicator
   function isDone(i: number) {

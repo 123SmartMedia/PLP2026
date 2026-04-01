@@ -15,6 +15,7 @@ export interface Database {
           full_name: string | null;
           phone: string | null;
           role: "customer" | "admin";
+          avatar_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -23,6 +24,7 @@ export interface Database {
           full_name?: string | null;
           phone?: string | null;
           role?: "customer" | "admin";
+          avatar_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -30,73 +32,89 @@ export interface Database {
           full_name?: string | null;
           phone?: string | null;
           role?: "customer" | "admin";
+          avatar_url?: string | null;
           updated_at?: string;
         };
       };
       coaches: {
         Row: {
           id: string;
+          profile_id: string | null;
           name: string;
-          slug: string;
-          role: string;
-          bio: string[];
+          bio: string | null;
+          image_url: string | null;
           specialties: string[];
-          sports: string[];
           active: boolean;
+          // Added via migration
+          slug: string | null;
+          role: string | null;
+          sports: string[];
           sort_order: number;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
+          profile_id?: string | null;
           name: string;
-          slug: string;
-          role: string;
-          bio?: string[];
+          bio?: string | null;
+          image_url?: string | null;
           specialties?: string[];
-          sports?: string[];
           active?: boolean;
+          slug?: string | null;
+          role?: string | null;
+          sports?: string[];
           sort_order?: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           name?: string;
-          slug?: string;
-          role?: string;
-          bio?: string[];
+          bio?: string | null;
+          image_url?: string | null;
           specialties?: string[];
-          sports?: string[];
           active?: boolean;
+          slug?: string | null;
+          role?: string | null;
+          sports?: string[];
           sort_order?: number;
+          updated_at?: string;
         };
       };
       services: {
         Row: {
           id: string;
+          type: "lesson" | "clinic" | "rental";
           name: string;
-          category: "lesson" | "clinic" | "rental";
-          duration_minutes: number;
-          price_cents: number;
           description: string | null;
+          price_cents: number;
+          duration_minutes: number;
+          max_participants: number;
           active: boolean;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
+          type: "lesson" | "clinic" | "rental";
           name: string;
-          category: "lesson" | "clinic" | "rental";
-          duration_minutes: number;
-          price_cents: number;
           description?: string | null;
+          price_cents: number;
+          duration_minutes: number;
+          max_participants?: number;
           active?: boolean;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
+          type?: "lesson" | "clinic" | "rental";
           name?: string;
-          category?: "lesson" | "clinic" | "rental";
-          duration_minutes?: number;
-          price_cents?: number;
           description?: string | null;
+          price_cents?: number;
+          duration_minutes?: number;
+          max_participants?: number;
           active?: boolean;
+          updated_at?: string;
         };
       };
       coach_services: {
@@ -113,29 +131,34 @@ export interface Database {
           service_id?: string;
         };
       };
-      availability: {
+      facilities: {
         Row: {
           id: string;
-          coach_id: string;
-          day_of_week: number;
-          start_time: string;
-          end_time: string;
+          type: string;
+          name: string;
+          description: string | null;
+          hourly_rate_cents: number;
           active: boolean;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
-          coach_id: string;
-          day_of_week: number;
-          start_time: string;
-          end_time: string;
+          type: string;
+          name: string;
+          description?: string | null;
+          hourly_rate_cents: number;
           active?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          coach_id?: string;
-          day_of_week?: number;
-          start_time?: string;
-          end_time?: string;
+          type?: string;
+          name?: string;
+          description?: string | null;
+          hourly_rate_cents?: number;
           active?: boolean;
+          updated_at?: string;
         };
       };
       bookings: {
@@ -143,14 +166,14 @@ export interface Database {
           id: string;
           user_id: string;
           coach_id: string | null;
+          facility_id: string | null;
           service_id: string;
-          facility_type: "cage" | "turf_full" | "turf_half" | null;
-          start_at: string;
-          end_at: string;
+          start_time: string;
+          end_time: string;
           status: "pending" | "confirmed" | "cancelled" | "completed";
+          payment_intent_id: string | null;
           notes: string | null;
-          stripe_payment_intent_id: string | null;
-          price_cents: number;
+          total_cents: number;
           created_at: string;
           updated_at: string;
         };
@@ -158,58 +181,64 @@ export interface Database {
           id?: string;
           user_id: string;
           coach_id?: string | null;
+          facility_id?: string | null;
           service_id: string;
-          facility_type?: "cage" | "turf_full" | "turf_half" | null;
-          start_at: string;
-          end_at: string;
+          start_time: string;
+          end_time: string;
           status?: "pending" | "confirmed" | "cancelled" | "completed";
+          payment_intent_id?: string | null;
           notes?: string | null;
-          stripe_payment_intent_id?: string | null;
-          price_cents: number;
+          total_cents: number;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           coach_id?: string | null;
+          facility_id?: string | null;
           service_id?: string;
-          facility_type?: "cage" | "turf_full" | "turf_half" | null;
-          start_at?: string;
-          end_at?: string;
+          start_time?: string;
+          end_time?: string;
           status?: "pending" | "confirmed" | "cancelled" | "completed";
+          payment_intent_id?: string | null;
           notes?: string | null;
-          stripe_payment_intent_id?: string | null;
-          price_cents?: number;
+          total_cents?: number;
           updated_at?: string;
         };
       };
       testimonials: {
         Row: {
           id: string;
+          user_id: string | null;
           author_name: string;
-          author_type: "parent" | "player" | "coach" | "team";
-          quote: string;
+          content: string;
           rating: number;
-          active: boolean;
-          sort_order: number;
+          approved: boolean;
+          // Added via migration
+          author_type: string | null;
+          sort_order: number | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
+          user_id?: string | null;
           author_name: string;
-          author_type?: "parent" | "player" | "coach" | "team";
-          quote: string;
-          rating?: number;
-          active?: boolean;
-          sort_order?: number;
+          content: string;
+          rating: number;
+          approved?: boolean;
+          author_type?: string | null;
+          sort_order?: number | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           author_name?: string;
-          author_type?: "parent" | "player" | "coach" | "team";
-          quote?: string;
+          content?: string;
           rating?: number;
-          active?: boolean;
-          sort_order?: number;
+          approved?: boolean;
+          author_type?: string | null;
+          sort_order?: number | null;
+          updated_at?: string;
         };
       };
     };
@@ -223,6 +252,6 @@ export interface Database {
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Coach = Database["public"]["Tables"]["coaches"]["Row"];
 export type Service = Database["public"]["Tables"]["services"]["Row"];
-export type Availability = Database["public"]["Tables"]["availability"]["Row"];
+export type Facility = Database["public"]["Tables"]["facilities"]["Row"];
 export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 export type Testimonial = Database["public"]["Tables"]["testimonials"]["Row"];

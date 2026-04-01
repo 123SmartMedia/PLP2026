@@ -58,16 +58,16 @@ export default async function DashboardPage() {
       services(name, duration_minutes)
     `)
     .eq("user_id", user!.id)
-    .order("start_at", { ascending: true });
+    .order("start_time", { ascending: true });
 
   const bookings = rawBookings as BookingWithRelations[] | null;
 
   const now = new Date().toISOString();
   const upcoming = (bookings ?? []).filter(
-    (b) => b.start_at >= now && b.status !== "cancelled"
+    (b) => b.start_time >= now && b.status !== "cancelled"
   );
   const past = (bookings ?? []).filter(
-    (b) => b.start_at < now || b.status === "completed"
+    (b) => b.start_time < now || b.status === "completed"
   );
   const nextSession = upcoming[0] ?? null;
 
@@ -145,7 +145,7 @@ export default async function DashboardPage() {
               {(nextSession as BookingWithRelations).coaches?.name
                 ? `with ${(nextSession as BookingWithRelations).coaches?.name} · `
                 : ""}
-              {formatDate(nextSession.start_at)}
+              {formatDate(nextSession.start_time)}
             </p>
           </div>
           <StatusBadge status={nextSession.status} />
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
                     {(booking as BookingWithRelations).services?.name ?? "Lesson"}
                   </p>
                   <p className="text-gray-400 text-xs mt-0.5">
-                    {formatDate(booking.start_at)}
+                    {formatDate(booking.start_time)}
                     {(booking as BookingWithRelations).coaches?.name
                       ? ` · ${(booking as BookingWithRelations).coaches?.name}`
                       : ""}
