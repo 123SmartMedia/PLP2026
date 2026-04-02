@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+// Service role client — bypasses RLS, safe for server-only webhook use
+function createServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -23,8 +31,8 @@ export async function POST(req: NextRequest) {
     const pi = event.data.object as Stripe.PaymentIntent;
     const { user_id, service_id, coach_id, start_at, end_at, notes } = pi.metadata;
 
-    const supabase = await createClient();
-    await supabase.from("bookings").insert({
+    const supabase = createServiceClient();
+    const { error } = await supabase.from("bookings").insert({
       user_id,
       service_id,
       coach_id: coach_id || null,
@@ -35,6 +43,11 @@ export async function POST(req: NextRequest) {
       notes: notes || null,
       status: "confirmed",
     });
+
+    if (error) {
+      console.error("Webhook booking insert failed:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ received: true });
