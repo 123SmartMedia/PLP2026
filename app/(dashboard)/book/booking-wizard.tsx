@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  CheckCircle2,
   Loader2,
 } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
 import type { Service, Coach } from "@/types/database";
-import { getAvailableSlots, createBooking, type Slot } from "./actions";
+import { getAvailableSlots, type Slot } from "./actions";
+import PaymentForm from "./payment-form";
+import { useRouter } from "next/navigation";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,11 +129,7 @@ function CoachStep({
         >
           <div className="w-11 h-11 rounded-full bg-navy flex items-center justify-center shrink-0">
             <span className="text-white font-bold text-sm">
-              {c.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .slice(0, 2)}
+              {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
             </span>
           </div>
           <div className="min-w-0 flex-1">
@@ -135,7 +137,7 @@ function CoachStep({
             <p className="text-gray-400 text-xs">{c.role}</p>
             {c.specialties?.length > 0 && (
               <p className="text-gray-400 text-xs mt-0.5">
-                {c.specialties.slice(0, 3).join(" · ")}
+                {(c.specialties as string[]).slice(0, 3).join(" · ")}
               </p>
             )}
           </div>
@@ -152,8 +154,8 @@ function CoachStep({
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
 ];
 
 function MiniCalendar({
@@ -191,50 +193,34 @@ function MiniCalendar({
         <button onClick={prev} className="p-1 text-gray-400 hover:text-navy transition-colors">
           <ChevronLeft size={18} />
         </button>
-        <p className="text-navy font-bold text-sm">
-          {MONTHS[month]} {year}
-        </p>
+        <p className="text-navy font-bold text-sm">{MONTHS[month]} {year}</p>
         <button onClick={next} className="p-1 text-gray-400 hover:text-navy transition-colors">
           <ChevronRight size={18} />
         </button>
       </div>
-
       <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">
-            {d}
-          </div>
+          <div key={d} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</div>
         ))}
       </div>
-
       <div className="grid grid-cols-7 gap-y-1">
-        {Array.from({ length: firstDay }).map((_, i) => (
-          <div key={`blank-${i}`} />
-        ))}
+        {Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} />)}
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1;
-          const dateStr = [
-            year,
-            String(month + 1).padStart(2, "0"),
-            String(day).padStart(2, "0"),
-          ].join("-");
+          const dateStr = [year, String(month + 1).padStart(2, "0"), String(day).padStart(2, "0")].join("-");
           const isPast = dateStr < todayStr;
           const isSelected = dateStr === selected;
           const isToday = dateStr === todayStr;
-
           return (
             <button
               key={day}
               disabled={isPast}
               onClick={() => onSelect(dateStr)}
               className={`h-9 w-full rounded-lg text-sm font-medium transition-all ${
-                isPast
-                  ? "text-gray-200 cursor-not-allowed"
-                  : isSelected
-                  ? "bg-navy text-white"
-                  : isToday
-                  ? "bg-gold/20 text-navy hover:bg-navy hover:text-white"
-                  : "text-navy hover:bg-gray-50"
+                isPast ? "text-gray-200 cursor-not-allowed"
+                : isSelected ? "bg-navy text-white"
+                : isToday ? "bg-gold/20 text-navy hover:bg-navy hover:text-white"
+                : "text-navy hover:bg-gray-50"
               }`}
             >
               {day}
@@ -268,12 +254,7 @@ function DateTimeStep({
     onDateSelect(date);
     setLoadingSlots(true);
     setSlots([]);
-    const result = await getAvailableSlots(
-      service.id,
-      service.duration_minutes,
-      date,
-      coach?.id ?? null
-    );
+    const result = await getAvailableSlots(service.id, service.duration_minutes, date, coach?.id ?? null);
     setSlots(result);
     setLoadingSlots(false);
   }
@@ -281,28 +262,18 @@ function DateTimeStep({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <MiniCalendar selected={selectedDate} onSelect={handleDateSelect} />
-
       <div className="min-h-[200px] flex flex-col">
         {!selectedDate ? (
-          <p className="text-gray-400 text-sm m-auto text-center">
-            Select a date to see available times.
-          </p>
+          <p className="text-gray-400 text-sm m-auto text-center">Select a date to see available times.</p>
         ) : loadingSlots ? (
           <div className="flex items-center gap-2 m-auto text-gray-400 text-sm">
-            <Loader2 size={16} className="animate-spin" />
-            Loading times…
+            <Loader2 size={16} className="animate-spin" /> Loading times…
           </div>
         ) : slots.length === 0 ? (
-          <p className="text-gray-400 text-sm m-auto text-center">
-            No available times on this date.
-            <br />
-            Try another day.
-          </p>
+          <p className="text-gray-400 text-sm m-auto text-center">No available times on this date.<br />Try another day.</p>
         ) : (
           <div>
-            <p className="text-navy font-semibold text-sm mb-3">
-              {formatDate(selectedDate)}
-            </p>
+            <p className="text-navy font-semibold text-sm mb-3">{formatDate(selectedDate)}</p>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
               {slots.map((slot) => (
                 <button
@@ -325,21 +296,20 @@ function DateTimeStep({
   );
 }
 
-// ─── Step 4: Confirm ──────────────────────────────────────────────────────────
+// ─── Step 4: Confirm + Pay ────────────────────────────────────────────────────
 
 function ConfirmStep({
   draft,
   onNotesChange,
-  onSubmit,
-  submitting,
-  error,
 }: {
   draft: Draft;
   onNotesChange: (s: string) => void;
-  onSubmit: () => void;
-  submitting: boolean;
-  error: string;
 }) {
+  const router = useRouter();
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const rows = [
     { label: "Service",  value: draft.service!.name },
     { label: "Coach",    value: draft.coach?.name ?? "No preference" },
@@ -348,6 +318,51 @@ function ConfirmStep({
     { label: "Duration", value: `${draft.service!.duration_minutes} min` },
     { label: "Price",    value: formatPrice(draft.service!.price_cents) },
   ];
+
+  async function handleProceedToPayment() {
+    setLoading(true);
+    setError("");
+    const res = await fetch("/api/stripe/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        priceCents: draft.service!.price_cents,
+        serviceId: draft.service!.id,
+        coachId: draft.coach?.id ?? null,
+        startAt: draft.slot!.start,
+        endAt: draft.slot!.end,
+        notes: draft.notes,
+      }),
+    });
+    const data = await res.json();
+    if (data.error) { setError(data.error); setLoading(false); return; }
+    setClientSecret(data.clientSecret);
+    setLoading(false);
+  }
+
+  if (clientSecret) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-50 rounded-xl divide-y divide-gray-100">
+          {rows.map(({ label, value }) => (
+            <div key={label} className="flex items-center justify-between px-5 py-3">
+              <span className="text-gray-500 text-sm">{label}</span>
+              <span className="text-navy font-semibold text-sm">{value}</span>
+            </div>
+          ))}
+        </div>
+        <Elements
+          stripe={stripePromise}
+          options={{ clientSecret, appearance: { theme: "stripe" } }}
+        >
+          <PaymentForm
+            priceCents={draft.service!.price_cents}
+            onSuccess={() => router.push("/dashboard/bookings?booked=1")}
+          />
+        </Elements>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -362,8 +377,7 @@ function ConfirmStep({
 
       <div>
         <label className="block text-navy text-sm font-semibold mb-1.5">
-          Notes{" "}
-          <span className="text-gray-400 font-normal">(optional)</span>
+          Notes <span className="text-gray-400 font-normal">(optional)</span>
         </label>
         <textarea
           rows={3}
@@ -377,27 +391,12 @@ function ConfirmStep({
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       <button
-        onClick={onSubmit}
-        disabled={submitting}
+        onClick={handleProceedToPayment}
+        disabled={loading}
         className="w-full flex items-center justify-center gap-2 bg-gold hover:bg-gold-light text-navy text-sm font-bold py-3 rounded-lg transition-colors disabled:opacity-60"
       >
-        {submitting ? (
-          <>
-            <Loader2 size={16} className="animate-spin" />
-            Booking…
-          </>
-        ) : (
-          <>
-            <CheckCircle2 size={16} />
-            Confirm Booking
-          </>
-        )}
+        {loading ? <><Loader2 size={16} className="animate-spin" /> Loading…</> : "Proceed to Payment"}
       </button>
-
-      <p className="text-center text-gray-400 text-xs">
-        Your booking will be marked as <strong>pending</strong> until confirmed
-        by the coach. You&apos;ll hear back within one business day.
-      </p>
     </div>
   );
 }
@@ -411,7 +410,7 @@ function currentStepIndex(draft: Draft): number {
   return 3;
 }
 
-const ALL_STEPS = ["Service", "Coach", "Date & Time", "Confirm"];
+const ALL_STEPS = ["Service", "Coach", "Date & Time", "Payment"];
 
 export default function BookingWizard({
   services,
@@ -427,13 +426,10 @@ export default function BookingWizard({
     slot: null,
     notes: "",
   });
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, startTransition] = useTransition();
 
   const step = currentStepIndex(draft);
   const isRental = draft.service?.type === "rental";
 
-  // Which steps are "done" for the indicator
   function isDone(i: number) {
     if (i === 0) return !!draft.service;
     if (i === 1) return !!draft.coach || (!!draft.service && isRental);
@@ -452,21 +448,6 @@ export default function BookingWizard({
     }
   }
 
-  function handleSubmit() {
-    setSubmitError("");
-    startTransition(async () => {
-      const result = await createBooking({
-        serviceId: draft.service!.id,
-        coachId: draft.coach?.id ?? null,
-        startAt: draft.slot!.start,
-        endAt: draft.slot!.end,
-        priceCents: draft.service!.price_cents,
-        notes: draft.notes,
-      });
-      if (result?.error) setSubmitError(result.error);
-    });
-  }
-
   return (
     <div>
       {/* ── Step indicator ── */}
@@ -475,35 +456,24 @@ export default function BookingWizard({
           const done = isDone(i);
           const active = step === i;
           const skipped = isRental && i === 1;
-
           return (
             <div key={label} className="flex items-center">
               <div className="flex items-center gap-2">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    done || skipped
-                      ? "bg-green-500 text-white"
-                      : active
-                      ? "bg-navy text-white"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  done || skipped ? "bg-green-500 text-white"
+                  : active ? "bg-navy text-white"
+                  : "bg-gray-100 text-gray-400"
+                }`}>
                   {done || skipped ? "✓" : i + 1}
                 </div>
-                <span
-                  className={`text-xs font-medium hidden sm:block ${
-                    active ? "text-navy" : done || skipped ? "text-green-600" : "text-gray-400"
-                  }`}
-                >
+                <span className={`text-xs font-medium hidden sm:block ${
+                  active ? "text-navy" : done || skipped ? "text-green-600" : "text-gray-400"
+                }`}>
                   {label}
                 </span>
               </div>
               {i < ALL_STEPS.length - 1 && (
-                <div
-                  className={`mx-2 h-px w-6 sm:w-10 shrink-0 ${
-                    done || skipped ? "bg-green-400" : "bg-gray-200"
-                  }`}
-                />
+                <div className={`mx-2 h-px w-6 sm:w-10 shrink-0 ${done || skipped ? "bg-green-400" : "bg-gray-200"}`} />
               )}
             </div>
           );
@@ -517,15 +487,11 @@ export default function BookingWizard({
             {step === 0 && "Choose a Service"}
             {step === 1 && "Choose a Coach"}
             {step === 2 && "Pick a Date & Time"}
-            {step === 3 && "Review & Confirm"}
+            {step === 3 && "Review & Pay"}
           </h2>
           {step > 0 && (
-            <button
-              onClick={goBack}
-              className="flex items-center gap-1 text-gray-400 hover:text-navy text-sm transition-colors"
-            >
-              <ChevronLeft size={16} />
-              Back
+            <button onClick={goBack} className="flex items-center gap-1 text-gray-400 hover:text-navy text-sm transition-colors">
+              <ChevronLeft size={16} /> Back
             </button>
           )}
         </div>
@@ -534,22 +500,16 @@ export default function BookingWizard({
           <ServiceStep
             services={services}
             selected={draft.service}
-            onSelect={(s) =>
-              setDraft({ service: s, coach: null, date: null, slot: null, notes: "" })
-            }
+            onSelect={(s) => setDraft({ service: s, coach: null, date: null, slot: null, notes: "" })}
           />
         )}
-
         {step === 1 && (
           <CoachStep
             coaches={coaches}
             selected={draft.coach}
-            onSelect={(c) =>
-              setDraft((p) => ({ ...p, coach: c, date: null, slot: null }))
-            }
+            onSelect={(c) => setDraft((p) => ({ ...p, coach: c, date: null, slot: null }))}
           />
         )}
-
         {step === 2 && draft.service && (
           <DateTimeStep
             service={draft.service}
@@ -560,14 +520,10 @@ export default function BookingWizard({
             onSlotSelect={(s) => setDraft((p) => ({ ...p, slot: s }))}
           />
         )}
-
         {step === 3 && draft.service && draft.slot && (
           <ConfirmStep
             draft={draft}
             onNotesChange={(n) => setDraft((p) => ({ ...p, notes: n }))}
-            onSubmit={handleSubmit}
-            submitting={submitting}
-            error={submitError}
           />
         )}
       </div>
