@@ -112,7 +112,7 @@ export default async function CoachSchedulePage() {
                       {profile?.phone ? ` · ${profile.phone}` : ""}
                     </div>
                     {b.notes && (
-                      <p className="mt-1 text-xs text-gray-400 italic">"{b.notes}"</p>
+                      <p className="mt-1 text-xs text-gray-400 italic">&ldquo;{b.notes}&rdquo;</p>
                     )}
                   </div>
                 </div>

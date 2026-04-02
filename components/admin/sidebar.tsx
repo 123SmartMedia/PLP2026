@@ -15,11 +15,6 @@ import {
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const navItems = [
-  { label: "Overview",  href: "/admin",          icon: LayoutDashboard },
-  { label: "Bookings",  href: "/admin/bookings",  icon: CalendarDays },
-  { label: "Coaches",   href: "/admin/coaches",   icon: Users },
-];
 
 function NavLink({
   href,

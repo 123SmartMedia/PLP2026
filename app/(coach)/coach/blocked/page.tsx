@@ -26,7 +26,7 @@ export default async function CoachBlockedPage() {
       <div>
         <h1 className="text-navy text-2xl font-extrabold tracking-tight">Blocked Times</h1>
         <p className="text-gray-500 text-sm mt-0.5">
-          Block out specific times you're unavailable. These override your weekly schedule.
+          Block out specific times you&apos;re unavailable. These override your weekly schedule.
         </p>
       </div>
       <BlockedTimesClient blocked={blocked ?? []} />
