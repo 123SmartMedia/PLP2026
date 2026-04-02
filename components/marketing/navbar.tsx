@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
@@ -12,7 +12,12 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-export default function Navbar() {
+interface NavbarProps {
+  portalHref: string;
+  portalLabel: string;
+}
+
+export default function Navbar({ portalHref, portalLabel }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -39,8 +44,15 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
+            <Link
+              href={portalHref}
+              className="flex items-center gap-1.5 text-white/70 hover:text-white text-sm font-medium transition-colors"
+            >
+              <LogIn size={15} />
+              {portalLabel}
+            </Link>
             <Button
               render={<Link href="/book" />}
               className="bg-gold hover:bg-gold-light text-navy font-semibold"
@@ -73,6 +85,14 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href={portalHref}
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-2 text-white/70 hover:text-white text-base font-medium py-2 transition-colors"
+          >
+            <LogIn size={16} />
+            {portalLabel}
+          </Link>
           <Button
             render={<Link href="/book" onClick={() => setMobileOpen(false)} />}
             className="bg-gold hover:bg-gold-light text-navy font-semibold mt-2"
