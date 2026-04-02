@@ -82,8 +82,8 @@ export default async function CoachSchedulePage() {
         ) : (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
             {upcoming.map((b) => {
-              const profile = b.profiles as { full_name: string; phone: string } | null;
-              const service = b.services as { name: string; duration_minutes: number } | null;
+              const profile = b.profiles as unknown as { full_name: string; phone: string } | null;
+              const service = b.services as unknown as { name: string; duration_minutes: number } | null;
               return (
                 <div key={b.id} className="px-5 py-4 flex items-start gap-4">
                   <div className="bg-navy/5 rounded-lg p-2.5 shrink-0">
@@ -128,8 +128,8 @@ export default async function CoachSchedulePage() {
           <h2 className="text-navy font-bold text-base">Recent Past Sessions</h2>
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm divide-y divide-gray-50">
             {past.map((b) => {
-              const profile = b.profiles as { full_name: string } | null;
-              const service = b.services as { name: string } | null;
+              const profile = b.profiles as unknown as { full_name: string } | null;
+              const service = b.services as unknown as { name: string } | null;
               return (
                 <div key={b.id} className="px-5 py-3 flex items-center justify-between gap-4 text-sm">
                   <div>
