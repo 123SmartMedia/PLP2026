@@ -37,90 +37,61 @@ Last updated: 2026-04-01
 - `/admin/bookings` — Full booking table, Confirm/Complete/Cancel actions
 - `/admin/coaches` — Toggle coaches active/inactive
 
-## Immediate TODO (next session)
+### Infrastructure
+- Deployed to Vercel (auto-deploys on every GitHub push)
+- Supabase Auth configured with production redirect URLs
+- RLS policies fixed with `is_admin()` security definer function (no recursion)
 
-### 1. Finish admin access
-Run this SQL to give yourself admin access (not done yet):
-```sql
-UPDATE public.profiles
-SET role = 'admin'
-WHERE id = 'e8befb36-ee14-4bc5-ab33-263021b1f20a';
-```
-
-### 2. Fix admin RLS policies
-Run these in Supabase SQL Editor if not already done:
-```sql
--- Allow admins to view all profiles (needed for booking table customer names)
-CREATE POLICY "Admins can view all profiles"
-  ON public.profiles FOR SELECT
-  USING (
-    auth.uid() = id
-    OR EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Allow admins to manage all bookings
-CREATE POLICY "Admins can manage all bookings"
-  ON public.bookings FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-
--- Allow admins to update coaches
-CREATE POLICY "Admins can update coaches"
-  ON public.coaches FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
-```
+## Completed This Session
+- ✅ Full booking flow working end-to-end (service → coach → date/time → confirm)
+- ✅ Admin panel with booking management and coach toggles
+- ✅ Admin access set up (michael.cabales18@gmail.com is admin)
+- ✅ RLS policies fixed — no more infinite recursion
+- ✅ Deployed to https://plp-2026.vercel.app
+- ✅ Supabase auth URLs updated for production
 
 ## Remaining Roadmap
 
-### 3. Stripe payments
+### 1. Stripe payments
 - Add Stripe checkout to the booking wizard before confirming
-- Requires: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY in .env.local
+- Requires: add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY to Vercel env vars
 - Booking status stays `pending` until payment succeeds
 
-### 4. Email notifications
+### 2. Email notifications
 - Send confirmation email when booking is created (customer)
-- Send notification email when admin confirms a booking (customer)
+- Send notification to admin when a new booking comes in
+- Send confirmation to customer when admin confirms
 - Recommended: Resend (resend.com) — simple API, free tier
+- Requires: add RESEND_API_KEY to Vercel env vars
 
-### 5. Coach availability
+### 3. Coach availability
 - Currently all time slots show every day 8am–8pm for all coaches
-- Need UI for admin to set each coach's weekly schedule
-- Table `availability` was not created in your Supabase project yet
+- Need an admin UI to set each coach's weekly schedule
+- Requires creating `availability` table in Supabase (not done yet)
 
-### 6. Deploy to Vercel
-- Connect GitHub repo (123SmartMedia/PLP2026) to Vercel
-- Add all .env.local values as Vercel environment variables
-- Set NEXT_PUBLIC_APP_URL to your production domain
-
-### 7. Real content
-- Replace placeholder coach bios (Danny, Mike, Richie, Anthony)
+### 4. Real content
+- Replace placeholder coach bios (Danny, Mike, Richie, Anthony) with real info
 - Add real coach photos (currently initials avatars)
-- Add real address/phone/email to contact page
+- Add real address, phone, email to the contact page (`app/(marketing)/contact/page.tsx`)
 - Add Google Maps embed to contact page
 - Update facility pricing (currently "Contact for Pricing")
+- Wire contact form to an email service (Resend)
+
+### 5. Nice-to-haves
+- Coaches page driven by DB instead of hardcoded
+- Testimonials pulled from DB (`testimonials` table exists, content column)
+- Password reset flow
 
 ## Tech Stack
-- Next.js 15 (App Router)
-- TypeScript
+- Next.js 15 (App Router) — auto-deploys via Vercel git integration
+- TypeScript strict mode
 - Tailwind CSS v3 + custom navy/gold brand colors
 - shadcn/ui with @base-ui/react (Button uses `render={<Link />}` not `asChild`)
-- Supabase Auth + PostgreSQL + @supabase/ssr
+- Supabase Auth + PostgreSQL + @supabase/ssr v0.6.1
 - GitHub: 123SmartMedia/PLP2026
 
 ## Known Issues
 - OneDrive creates conflict copies (e.g. `page-MCABALES-LAPTOP.tsx`) that break builds
-  - Fix: delete them and run `npm install` if dev server fails
-  - Use `powershell -Command "Remove-Item -Recurse -Force '.next'"` to clear build cache
+  - Fix: delete them, run `npm install`, clear cache with `powershell -Command "Remove-Item -Recurse -Force '.next'"`
 - node_modules occasionally corrupted by OneDrive sync — fix with `npm install`
+- Stripe keys in .env.local are placeholders — Stripe not yet integrated
