@@ -1,5 +1,5 @@
 # PLP2026 — Project Status
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 
 ## Live URLs
 - **Production**: https://plp-2026.vercel.app
@@ -49,6 +49,9 @@ Last updated: 2026-04-01
 - ✅ RLS policies fixed — no more infinite recursion
 - ✅ Deployed to https://plp-2026.vercel.app
 - ✅ Supabase auth URLs updated for production
+- ✅ Stripe payments working end-to-end
+- ✅ SendGrid email notifications on booking confirmation
+- ✅ Project moved from OneDrive to C:\Projects\PLP2026
 
 ## Remaining Roadmap
 
@@ -59,12 +62,12 @@ Last updated: 2026-04-01
 - Uses service role client to bypass RLS in webhook context
 - Test card: 4242 4242 4242 4242 / any future date / any CVC
 
-### 2. Email notifications
-- Send confirmation email when booking is created (customer)
-- Send notification to admin when a new booking comes in
-- Send confirmation to customer when admin confirms
-- Recommended: Resend (resend.com) — simple API, free tier
-- Requires: add RESEND_API_KEY to Vercel env vars
+### ✅ Email notifications (DONE)
+- SendGrid integrated via `@sendgrid/mail`
+- Booking confirmation sent to customer on successful Stripe payment
+- Admin notification sent to admin@123smartmedia.com (temp — will switch to admin@playlikeaprobaseball.com)
+- FROM address: bookings@playlikeaprobaseball.com
+- SENDGRID_API_KEY in .env.local and must be added to Vercel env vars
 
 ### 3. Coach availability
 - Currently all time slots show every day 8am–8pm for all coaches
@@ -93,7 +96,5 @@ Last updated: 2026-04-01
 - GitHub: 123SmartMedia/PLP2026
 
 ## Known Issues
-- OneDrive creates conflict copies (e.g. `page-MCABALES-LAPTOP.tsx`) that break builds
-  - Fix: delete them, run `npm install`, clear cache with `powershell -Command "Remove-Item -Recurse -Force '.next'"`
-- node_modules occasionally corrupted by OneDrive sync — fix with `npm install`
-- Stripe keys in .env.local are placeholders — Stripe not yet integrated
+- Admin email temporarily set to admin@123smartmedia.com — switch to admin@playlikeaprobaseball.com when ready (lib/sendgrid.ts:6)
+- SENDGRID_API_KEY needs to be added to Vercel environment variables for emails to work in production

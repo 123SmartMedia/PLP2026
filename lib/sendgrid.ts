@@ -3,7 +3,7 @@ import sgMail from "@sendgrid/mail";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 const FROM_EMAIL = "bookings@playlikeaprobaseball.com";
-const ADMIN_EMAIL = "admin@playlikeaprobaseball.com";
+const ADMIN_EMAIL = "admin@123smartmedia.com"; // TODO: switch to admin@playlikeaprobaseball.com
 const BRAND_NAME = "Play Like a Pro";
 
 export interface BookingEmailData {
