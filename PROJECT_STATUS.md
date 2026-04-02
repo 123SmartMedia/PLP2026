@@ -1,8 +1,10 @@
 # PLP2026 — Project Status
 Last updated: 2026-04-01
 
-## Live Supabase Project
-- URL: https://wdqblzzmtafmfqwxsavb.supabase.co
+## Live URLs
+- **Production**: https://plp-2026.vercel.app
+- **GitHub**: https://github.com/123SmartMedia/PLP2026
+- **Supabase**: https://wdqblzzmtafmfqwxsavb.supabase.co
 - Admin user: michael.cabales18@gmail.com (ID: e8befb36-ee14-4bc5-ab33-263021b1f20a)
 
 ## What's Built
