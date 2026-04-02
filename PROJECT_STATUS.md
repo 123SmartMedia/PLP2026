@@ -12,9 +12,10 @@ Last updated: 2026-04-02
 ### Marketing Site (public)
 - `/` — Homepage (hero, services, coaches, testimonials, CTA)
 - `/services` — Services detail page with anchors
-- `/coaches` — Full coaching staff page (hardcoded, not DB-driven)
+- `/coaches` — Full coaching staff page (hardcoded, not DB-driven yet)
 - `/facility` — Facility rentals page
 - `/contact` — Contact form (simulated send, not wired to email yet)
+- Navbar shows smart Login button — routes to correct portal by role (guest → /login, admin → /admin, coach → /coach, customer → /dashboard)
 
 ### Auth
 - `/login` — Email/password login
@@ -30,28 +31,26 @@ Last updated: 2026-04-02
 - Step 1: Choose service (grouped by type: lesson/clinic/rental)
 - Step 2: Choose coach (skipped for rentals)
 - Step 3: Pick date & time (slots generated from default 8am–8pm, checks existing bookings)
-- Step 4: Confirm & notes → saves to Supabase as `pending`
+- Step 4: Confirm & notes → Stripe payment → saved as `confirmed`
 
 ### Admin Panel (`/admin`)
 - `/admin` — Overview: pending/confirmed/completed/cancelled counts + revenue
 - `/admin/bookings` — Full booking table, Confirm/Complete/Cancel actions
-- `/admin/coaches` — Toggle coaches active/inactive
+- `/admin/coaches` — Add/edit coaches with headshot upload, bio, specialties, sports, contact info, display order; toggle active/inactive; create/remove coach portal logins
+
+### Coach Portal (`/coach`)
+- `/coach` — Upcoming & past bookings (customer name, phone, service, status)
+- `/coach/availability` — Set weekly recurring hours per day
+- `/coach/blocked` — Block specific dates/times with optional reason
+- `/coach/profile` — Edit phone & notification email
+- Access created by admin from `/admin/coaches` — sends Supabase invite email
 
 ### Infrastructure
 - Deployed to Vercel (auto-deploys on every GitHub push)
 - Supabase Auth configured with production redirect URLs
-- RLS policies fixed with `is_admin()` security definer function (no recursion)
-
-## Completed This Session
-- ✅ Full booking flow working end-to-end (service → coach → date/time → confirm)
-- ✅ Admin panel with booking management and coach toggles
-- ✅ Admin access set up (michael.cabales18@gmail.com is admin)
-- ✅ RLS policies fixed — no more infinite recursion
-- ✅ Deployed to https://plp-2026.vercel.app
-- ✅ Supabase auth URLs updated for production
-- ✅ Stripe payments working end-to-end
-- ✅ SendGrid email notifications on booking confirmation
-- ✅ Project moved from OneDrive to C:\Projects\PLP2026
+- RLS policies for customer, admin, and coach roles
+- Supabase Storage bucket `coach-photos` (public read, admin write)
+- Project lives at C:\Projects\PLP2026 (moved from OneDrive)
 
 ## Remaining Roadmap
 
@@ -59,42 +58,51 @@ Last updated: 2026-04-02
 - Payment Intent created server-side on "Proceed to Payment"
 - Stripe Elements card form embedded in booking wizard step 4
 - Webhook at `/api/stripe/webhook` saves booking as `confirmed` on payment success
-- Uses service role client to bypass RLS in webhook context
 - Test card: 4242 4242 4242 4242 / any future date / any CVC
 
 ### ✅ Email notifications (DONE)
 - SendGrid integrated via `@sendgrid/mail`
 - Booking confirmation sent to customer on successful Stripe payment
-- Admin notification sent to admin@123smartmedia.com (temp — will switch to admin@playlikeaprobaseball.com)
+- Admin notification sent to admin@123smartmedia.com (temp — switch to admin@playlikeaprobaseball.com)
 - FROM address: bookings@playlikeaprobaseball.com
-- SENDGRID_API_KEY in .env.local and must be added to Vercel env vars
 
-### 3. Coach availability
-- Currently all time slots show every day 8am–8pm for all coaches
-- Need an admin UI to set each coach's weekly schedule
-- Requires creating `availability` table in Supabase (not done yet)
+### ✅ Coach portal (DONE)
+- Coach login created by admin, role-guarded portal
+- Schedule, availability, blocked times, profile pages
 
-### 4. Real content
-- Replace placeholder coach bios (Danny, Mike, Richie, Anthony) with real info
-- Add real coach photos (currently initials avatars)
-- Add real address, phone, email to the contact page (`app/(marketing)/contact/page.tsx`)
+### 1. Wire booking wizard to coach availability
+- Booking time slots still use hardcoded 8am–8pm
+- Need to query `availability` and `blocked_times` tables when generating slots
+- Blocked times should remove slots that overlap
+
+### 2. Real content
+- Upload real coach headshots via `/admin/coaches`
+- Update coach bios via `/admin/coaches/[id]/edit`
+- Add real address, phone, email to contact page (`app/(marketing)/contact/page.tsx`)
 - Add Google Maps embed to contact page
 - Update facility pricing (currently "Contact for Pricing")
-- Wire contact form to an email service (Resend)
+- Wire contact form to SendGrid
 
-### 5. Nice-to-haves
-- Coaches page driven by DB instead of hardcoded
-- Testimonials pulled from DB (`testimonials` table exists, content column)
+### 3. Coaches public page — DB driven
+- `/coaches` is currently hardcoded
+- Replace with DB query so new coaches added in admin appear automatically
+
+### 4. Nice-to-haves
+- Testimonials pulled from DB
 - Password reset flow
+- Coaches page on marketing site shows real headshots from Supabase Storage
 
 ## Tech Stack
 - Next.js 15 (App Router) — auto-deploys via Vercel git integration
 - TypeScript strict mode
 - Tailwind CSS v3 + custom navy/gold brand colors
 - shadcn/ui with @base-ui/react (Button uses `render={<Link />}` not `asChild`)
-- Supabase Auth + PostgreSQL + @supabase/ssr v0.6.1
+- Supabase Auth + PostgreSQL + Storage — @supabase/ssr v0.6.1
+- SendGrid — booking confirmation + admin notification emails
+- Stripe — payments + webhook
 - GitHub: 123SmartMedia/PLP2026
 
 ## Known Issues
-- Admin email temporarily set to admin@123smartmedia.com — switch to admin@playlikeaprobaseball.com when ready (lib/sendgrid.ts:6)
-- SENDGRID_API_KEY needs to be added to Vercel environment variables for emails to work in production
+- Admin email temporarily set to admin@123smartmedia.com — switch to admin@playlikeaprobaseball.com when ready (`lib/sendgrid.ts:6`)
+- Booking time slots ignore coach availability/blocked times — still hardcoded 8am–8pm
+- `/coaches` marketing page is hardcoded — does not reflect DB changes
