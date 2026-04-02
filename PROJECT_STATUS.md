@@ -52,10 +52,12 @@ Last updated: 2026-04-01
 
 ## Remaining Roadmap
 
-### 1. Stripe payments
-- Add Stripe checkout to the booking wizard before confirming
-- Requires: add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY and STRIPE_SECRET_KEY to Vercel env vars
-- Booking status stays `pending` until payment succeeds
+### ✅ Stripe payments (DONE)
+- Payment Intent created server-side on "Proceed to Payment"
+- Stripe Elements card form embedded in booking wizard step 4
+- Webhook at `/api/stripe/webhook` saves booking as `confirmed` on payment success
+- Uses service role client to bypass RLS in webhook context
+- Test card: 4242 4242 4242 4242 / any future date / any CVC
 
 ### 2. Email notifications
 - Send confirmation email when booking is created (customer)
